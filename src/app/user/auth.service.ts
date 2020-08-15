@@ -54,6 +54,7 @@ export class AuthService {
     });
     return;
   }
+
   confirmUser(username: string, code: string) {
     this.authIsLoading.next(true);
     const userData = {
@@ -72,6 +73,7 @@ export class AuthService {
       this.router.navigate(['/']);
     });
   }
+
   signIn(username: string, password: string): void {
     this.authIsLoading.next(true);
     const authData = {
@@ -101,18 +103,34 @@ export class AuthService {
     this.authStatusChanged.next(true);
     return;
   }
+
   getAuthenticatedUser() {
+    return userPool.getCurrentUser();
   }
+
   logout() {
+    this.getAuthenticatedUser().signOut();
     this.authStatusChanged.next(false);
   }
+
   isAuthenticated(): Observable<boolean> {
     const user = this.getAuthenticatedUser();
     const obs = Observable.create((observer) => {
       if (!user) {
         observer.next(false);
       } else {
-        observer.next(false);
+        user.getSession((err, session) => {
+          if (err) {
+            observer.next(false);
+          } else {
+            if (session.isValid()) {
+              observer.next(true);
+            } else {
+              observer.next(false);
+            }
+          }
+        });
+
       }
       observer.complete();
     });
